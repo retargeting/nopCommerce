@@ -1,0 +1,197 @@
+﻿using System.Collections.Generic;
+
+namespace Nop.Plugin.Widgets.Retargeting.Models
+{
+    public record PublicInfoModel
+    {
+        public PublicInfoModel()
+        {
+            CategoryModel = new CategoryModel();
+            ManufacturerModel = new ManufacturerModel();
+            OrderModel = new OrderModel();
+            CustomerModel = new CustomerModel();
+            CartItemsToDelete = new Dictionary<int, Dictionary<string, string>>();
+        }
+
+        public string TrackingApiKey { get; set; }
+
+        public int ProductId { get; set; }
+
+        public string CartItemIds { get; set; }
+
+        public Dictionary<int, Dictionary<string, string>> CartItemsToDelete { get; set; }
+
+        public object AddToCartProductInfo { get; set; }
+
+        public CustomerModel CustomerModel { get; set; }
+
+        public CategoryModel CategoryModel { get; set; }
+
+        public ManufacturerModel ManufacturerModel { get; set; }
+
+        public OrderModel OrderModel { get; set; }
+
+        #region Selectors
+
+        public string AddToCartButtonIdDetailsPrefix { get; set; }
+
+        public string ProductPriceLabelDetailsSelector { get; set; }
+
+        public string AddToWishlistButtonIdDetailsPrefix { get; set; }
+
+        public string AddToWishlistCatalogButtonSelector { get; set; }
+
+        public string ProductReviewAddedResultSelector { get; set; }
+
+        public string AddToCartCatalogButtonSelector { get; set; }
+
+        public string ProductBoxSelector { get; set; }
+
+        public string ProductMainPictureIdDetailsPrefix { get; set; }
+
+        #endregion
+
+        #region Render functions
+
+        public bool RenderSetEmailFunc { get; set; }
+
+        public bool RenderSendCategoryFunc { get; set; }
+
+        public bool RenderSendBrandFunc { get; set; }
+
+        public bool RenderSendProductFunc { get; set; }
+
+        public bool RenderAddToCartFunc { get; set; }
+
+        public bool RenderAddToWishlistFunc { get; set; }
+
+        public bool RenderSendOrderFunc { get; set; }
+
+        public bool RenderClickImageFunc { get; set; }
+
+        public bool RenderCommentOnProductFunc { get; set; }
+
+        public bool RenderVisitHelpPageFunc { get; set; }
+
+        public bool RenderVisitHomePageFunc { get; set; }
+
+        public bool RenderCheckoutIdsFunc { get; set; }
+
+        public bool RenderPageNotFoundFunc { get; set; }
+
+        public bool RenderSendSearchTermFunc { get; set; }
+
+        public bool RenderThankYouFunc { get; set; }
+
+        #endregion
+
+        #region Recomendation
+
+        public bool RecommendationHomePage { get; set; }
+
+        public bool RecommendationCategoryPage { get; set; }
+
+        public bool RecommendationProductPage { get; set; }
+
+        public bool RecommendationCheckoutPage { get; set; }
+
+        public bool RecommendationThankYouPage { get; set; }
+
+        public bool RecommendationOutOfStockPage { get; set; }
+
+        public bool RecommendationSearchPage { get; set; }
+
+        public bool RecommendationPageNotFound { get; set; }
+
+
+        #endregion
+    }
+
+    public class CustomerModel
+    {
+        public string Email { get; set; }
+
+        public string Name { get; set; }
+
+        public string Phone { get; set; }
+
+        public string City { get; set; }
+
+        public string Sex { get; set; }
+
+        public string Birthday { get; set; }
+    }
+
+    public class CategoryModel
+    {
+        public int CategoryId { get; set; }
+
+        public string CategoryName { get; set; }
+
+        public int ParentCategoryId { get; set; }
+
+        public string ParentCategoryName { get; set; }
+
+        public int ParentParentCategoryId { get; set; }
+
+        public string ParentParentCategoryName { get; set; }
+    }
+
+    public class ManufacturerModel
+    {
+        public int ManufacturerId { get; set; }
+
+        public string ManufacturerName { get; set; }
+    }
+
+    public class OrderModel
+    {
+        public OrderModel()
+        {
+            OrderItems = new List<OrderItem>();
+        }
+
+        public int Id { get; set; }
+
+        public string LastName { get; set; }
+
+        public string FirstName { get; set; }
+
+        public string Email { get; set; }
+
+        public string Phone { get; set; }
+
+        public string State { get; set; }
+
+        public string City { get; set; }
+
+        public string Address { get; set; }
+
+        public string Birthday { get; set; }
+
+        public List<string> DiscountCode { get; set; }
+
+        public string Discount { get; set; }
+
+        public string Shipping { get; set; }
+
+        public int Rebates { get; set; }
+
+        public int Fees { get; set; }
+
+        public string Total { get; set; }
+
+        public List<OrderItem> OrderItems { get; set; }
+    }
+
+    public class OrderItem
+    {
+        public int Id { get; set; }
+
+        public int Quantity { get; set; }
+
+        public string Price { get; set; }
+
+        public string VariationCode { get; set; }
+    }
+}
