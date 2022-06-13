@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -276,6 +277,7 @@ namespace Nop.Plugin.Widgets.Retargeting.Controllers
             //load settings for a chosen store scope
             var storeScope = await _storeContext.GetActiveStoreScopeConfigurationAsync();
             var retargetingSettings = await _settingService.LoadSettingAsync<RetargetingSettings>(storeScope);
+            var urlLink= (await _storeContext.GetCurrentStoreAsync()).Url;
 
             var model = new ConfigurationModel
             {
@@ -306,8 +308,14 @@ namespace Nop.Plugin.Widgets.Retargeting.Controllers
 
                 MerchantEmail = retargetingSettings.MerchantEmail,
 
-                ActiveStoreScopeConfiguration = storeScope
+                ActiveStoreScopeConfiguration = storeScope,
+                feedLinks = "Link Feed",
+                feedContent = new List<string>()
             };
+            
+            model.feedContent.Add(urlLink+"widgetsretargeting/productstockfeed");
+            model.feedContent.Add(urlLink+"widgetsretargeting/productstaticfeed");
+            model.feedContent.Add(urlLink+"widgetsretargeting/productcronfeed");
 
             if (storeScope > 0)
             {
@@ -498,9 +506,8 @@ namespace Nop.Plugin.Widgets.Retargeting.Controllers
 
         public async Task<IActionResult> ProductStockFeed()
         {
-            var fileName = string.Format("feed_{0}_{1}.csv", DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss"), CommonHelper.GenerateRandomDigitCode(4));
+            var fileName = "retargeting.csv";
             var result = string.Empty;
-
             try
             {
                 var pluginDescriptor = await _pluginService.GetPluginDescriptorBySystemNameAsync<IPlugin>("Widgets.Retargeting");
@@ -515,7 +522,52 @@ namespace Nop.Plugin.Widgets.Retargeting.Controllers
                 await _logger.ErrorAsync(exc.Message, exc);
             }
 
+            System.IO.File.WriteAllText(fileName, result);
+
             return File(Encoding.UTF8.GetBytes(result), MimeTypes.TextCsv, fileName);
+        }
+
+        public async Task<IActionResult> ProductStaticFeed()
+        {   
+            var fileName = "retargeting.csv";
+
+            if (System.IO.File.Exists(fileName))
+            {
+                string readText = System.IO.File.ReadAllText(fileName);
+                return File(Encoding.UTF8.GetBytes(readText), MimeTypes.TextCsv, fileName);
+            }
+            else
+            {
+                var output = await ProductStockFeed();
+                return output;
+            }
+        }
+
+        public async Task<IActionResult> ProductCronFeed()
+        {
+            var fileName = "retargeting.csv";
+            var result = string.Empty;
+            var outPut = new Dictionary<string, object> ();
+            try
+            {
+                var pluginDescriptor = await _pluginService.GetPluginDescriptorBySystemNameAsync<IPlugin>("Widgets.Retargeting");
+                if (pluginDescriptor == null || pluginDescriptor.Instance<IPlugin>() is not RetargetingPlugin plugin)
+                    throw new Exception(await _localizationService.GetResourceAsync("Plugins.Widgets.Retargeting.ExceptionLoadPlugin"));
+
+                result = await plugin.ExportProductsToCsvAsync();
+                System.IO.File.WriteAllText(fileName, result);
+                outPut.Add("status", true);
+                outPut.Add("error", null);
+            }
+            catch (Exception exc)
+            {
+                _notificationService.ErrorNotification(exc.Message);
+                await _logger.ErrorAsync(exc.Message, exc);
+                outPut.Add("status", false);
+                outPut.Add("error", exc);
+            }
+
+            return Json(outPut);
         }
 
         public async Task<IActionResult> GenerateDiscounts(string key, string value, int type, int count)

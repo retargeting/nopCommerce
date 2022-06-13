@@ -4,6 +4,10 @@
     <div class="card card-default">
         <div class="card-body">
             <p>
+                <a href="https://retargeting.biz" target="_blank">
+                    <img src="https://retargeting.biz/img/logos/LOGO_retargeting.svg" style="width:200px"></p>
+                </a>
+            <p>
                 @T("Plugins.Widgets.Retargeting.SubscribeRetargeting")
             </p>
             <div class="form-group row">
@@ -223,6 +227,23 @@
                     <span asp-validation-for="RecommendationPageNotFound"></span>
                 </div>
             </div>
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <div class="label-wrapper">
+                        <label class="col-form-label">
+                            @Model.feedLinks
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    Live Feed - <a href="@Model.feedContent[0]" target="_blank">@Model.feedContent[0]</a>
+                    <br />
+                    Static Feed - <a href="@Model.feedContent[1]" target="_blank">@Model.feedContent[1]</a>
+                    <br />
+                    Generate Static Feed - <a href="@Model.feedContent[2]" target="_blank">@Model.feedContent[2]</a>
+                </div>
+            </div>
+
             <div class="form-group row">
                 <div class="col-md-9 offset-md-3">
                     <button type="submit" name="save" class="btn btn-primary">@T("Admin.Common.Save")</button>
