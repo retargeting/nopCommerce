@@ -141,7 +141,7 @@ namespace Nop.Plugin.Widgets.Retargeting.Services
                 if (pluginDescriptor.Instance<IPlugin>() is not RetargetingPlugin plugin)
                     throw new Exception(await _localizationService.GetResourceAsync("Plugins.Widgets.Retargeting.ExceptionLoadPlugin"));
 
-                await plugin.SendOrderAsync(placeOrderResult.PlacedOrder.Id);
+                // await plugin.SendOrderAsync(placeOrderResult.PlacedOrder.Id);
             }
 
             return placeOrderResult;

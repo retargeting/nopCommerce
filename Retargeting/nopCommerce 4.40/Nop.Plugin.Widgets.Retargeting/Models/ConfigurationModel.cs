@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 using Nop.Web.Framework.Mvc.ModelBinding;
 
 namespace Nop.Plugin.Widgets.Retargeting.Models
@@ -97,5 +98,13 @@ namespace Nop.Plugin.Widgets.Retargeting.Models
         [NopResourceDisplayName("Plugins.Widgets.Retargeting.RecommendationPageNotFound")]
         public bool RecommendationPageNotFound { get; set; }
         public bool RecommendationPageNotFound_OverrideForStore { get; set; }
+
+        [NopResourceDisplayName("Plugins.Widgets.Retargeting.feedLinks")]
+        public string feedLinks { get; set; }
+        public string feedLinks_OverrideForStore { get; set; }
+
+        [NopResourceDisplayName("Plugins.Widgets.Retargeting.feedContent")]
+        public List<string> feedContent { get; set; }
+        public string feedContent_OverrideForStore { get; set; }
     }
 }

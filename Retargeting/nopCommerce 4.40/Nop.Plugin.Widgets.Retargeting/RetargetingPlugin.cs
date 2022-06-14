@@ -391,6 +391,20 @@ namespace Nop.Plugin.Widgets.Retargeting
 
                 foreach (var currentProduct in productsToProcess)
                 {
+                    //image url
+                    var productPicturesCacheKey = _staticCacheManager.PrepareKeyForDefaultCache(ModelCacheEventConsumer.ProductPicturesModelKey, currentProduct.Id, _webHelper.IsCurrentConnectionSecured() ? Uri.UriSchemeHttps : Uri.UriSchemeHttp, (await _storeContext.GetCurrentStoreAsync()).Id);
+
+                    var cachedProductPictures = await _staticCacheManager.GetAsync(productPicturesCacheKey, async () =>
+                    {
+                        return await _pictureService.GetPicturesByProductIdAsync(currentProduct.Id);
+                    });
+
+                    var imageUrl = cachedProductPictures.FirstOrDefault() != null ? (await _pictureService.GetPictureUrlAsync(cachedProductPictures.FirstOrDefault())).Url : "";
+                    
+                    if (imageUrl == "") 
+                    {
+                        continue;
+                    }
                     //product id
                     sb.Append(currentProduct.Id);
                     sb.Append(separator);
@@ -403,16 +417,6 @@ namespace Nop.Plugin.Widgets.Retargeting
                     sb.Append(urlHelper.RouteUrl("Product", new { SeName = await _urlRecordService.GetSeNameAsync(currentProduct) }, _webHelper.GetCurrentRequestProtocol()));
                     sb.Append(separator);
 
-                    //image url
-                    var productPicturesCacheKey = _staticCacheManager.PrepareKeyForDefaultCache(ModelCacheEventConsumer.ProductPicturesModelKey, currentProduct.Id, _webHelper.IsCurrentConnectionSecured() ? Uri.UriSchemeHttps : Uri.UriSchemeHttp, (await _storeContext.GetCurrentStoreAsync()).Id);
-
-                    var cachedProductPictures = await _staticCacheManager.GetAsync(productPicturesCacheKey, async () =>
-                    {
-                        return await _pictureService.GetPicturesByProductIdAsync(currentProduct.Id);
-                    });
-
-                    var imageUrl = cachedProductPictures.FirstOrDefault() != null ? (await _pictureService.GetPictureUrlAsync(cachedProductPictures.FirstOrDefault())).Url : "";
-
                     sb.Append(imageUrl);
                     sb.Append(separator);
 
@@ -423,11 +427,11 @@ namespace Nop.Plugin.Widgets.Retargeting
                     //price
                     var (price, priceWithDiscount) = await GetProductPriceAsync(currentProduct);
 
-                    sb.Append(String.Format("{0:0.00}", price));
+                    sb.Append($"\"{price}\"");
                     sb.Append(separator);
 
                     //sale price
-                    sb.Append(String.Format("{0:0.00}", priceWithDiscount));
+                    sb.Append($"\"{priceWithDiscount}\"");
                     sb.Append(separator);
 
                     //brand
@@ -463,7 +467,10 @@ namespace Nop.Plugin.Widgets.Retargeting
                     {
                         foreach (var category in categories)
                         {
-                            categoryString.Add($"\"{category.Id}\"",$"\"{category.Name}\"");
+                            if (!categoryString.ContainsKey($"\"{category.Id}\""))
+                            {
+                                categoryString.Add($"\"{category.Id}\"",$"\"{category.Name}\"");
+                            } 
                         }
                     }
                     else
@@ -498,7 +505,7 @@ namespace Nop.Plugin.Widgets.Retargeting
                                 variations.Add(new Dictionary<string, object> {
                                     {"\"code\"", $"\"{varCode}\"" },
                                     {"\"price\"", $"\"{combinationPrice}\"" },
-                                    {"\"sale price\"", $"\"{combinationPriceWithDiscount}\"" },
+                                    {"\"sale_price\"", $"\"{combinationPriceWithDiscount}\"" },
                                     {"\"stock\"", existingCombination.StockQuantity},
                                     {"\"margin\"", null},
                                     {"\"in_supplier_stock\"", existingCombination.StockQuantity > 0 }
@@ -509,9 +516,10 @@ namespace Nop.Plugin.Widgets.Retargeting
 
                     //media gallery
                     var imageUrls = new List<string>();
+                    
                     foreach (var picture in cachedProductPictures)
                         imageUrls.Add($"\"{(await _pictureService.GetPictureUrlAsync(picture)).Url}\"".Replace("/", "\\/"));
-
+                    
                     //extra data object
                     var extraData = new Dictionary<string, object>
                     {
@@ -574,8 +582,8 @@ namespace Nop.Plugin.Widgets.Retargeting
             if (priceWithDiscountBase == decimal.Zero)
                 priceWithDiscountBase = priceBase;
 
-            var price = String.Format("{0:0.00}", priceBase);
-            var priceWithDiscount = String.Format("{0:0.00}", priceWithDiscountBase);
+            var price =  Regex.Replace(String.Format("{0:0.00}", priceBase), "([0-9]+),([0-9]{1,2})$", "$1.$2");
+            var priceWithDiscount = Regex.Replace(String.Format("{0:0.00}", priceWithDiscountBase), "([0-9]+),([0-9]{1,2})$", "$1.$2");
 
             return (price, priceWithDiscount);
         }
@@ -651,17 +659,17 @@ namespace Nop.Plugin.Widgets.Retargeting
                     }
 
                     //send order using Retargeting REST API 
-                    //var restApiHelper = new RetargetingRestApiHelper();
-                    //var response = await restApiHelper.GetJsonAsync(_logger, "https://retargeting.biz/api/1.0/order/save.json", HttpMethod.Post, sb.ToString());
+                    var restApiHelper = new RetargetingRestApiHelper();
+                    var response = await restApiHelper.GetJsonAsync(_logger, "https://retargeting.biz/api/1.0/order/save.json", HttpMethod.Post, sb.ToString());
 
                     //order note
-                    //await _orderService.InsertOrderNoteAsync(new OrderNote
-                    //{
-                    //    OrderId = order.Id,
-                    //    Note = string.Format("Retargeting REST API. Saving the order data result: {0}", response),
-                    //    DisplayToCustomer = false,
-                    //    CreatedOnUtc = DateTime.UtcNow
-                    //});
+                    await _orderService.InsertOrderNoteAsync(new OrderNote
+                    {
+                        OrderId = order.Id,
+                        Note = string.Format("Retargeting REST API. Saving the order data result: {0}", response),
+                        DisplayToCustomer = false,
+                        CreatedOnUtc = DateTime.UtcNow
+                    });
                     await _orderService.UpdateOrderAsync(order);
                 }
             }
