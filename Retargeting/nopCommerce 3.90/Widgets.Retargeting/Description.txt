@@ -1,4 +1,4 @@
-﻿Group: Widgets
+Group: Widgets
 FriendlyName: Retargeting
 SystemName: Widgets.Retargeting
 Version: 1.07

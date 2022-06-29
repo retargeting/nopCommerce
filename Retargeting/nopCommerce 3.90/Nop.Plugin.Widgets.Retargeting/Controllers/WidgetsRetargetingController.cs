@@ -502,11 +502,20 @@ namespace Nop.Plugin.Widgets.Retargeting.Controllers
                         var itemPrice = order.CustomerTaxDisplayType == TaxDisplayType.IncludingTax
                                             ? orderItem.UnitPriceInclTax
                                             : orderItem.UnitPriceExclTax;
+
+                        var itemPricePromo = order.CustomerTaxDisplayType == TaxDisplayType.IncludingTax
+                                            ? orderItem.PriceInclTax
+                                            : orderItem.PriceExclTax;
+
+                        var realPrice = itemPricePromo <= 0 
+                                            ? itemPrice
+                                            : itemPricePromo;
+                        
                         var item = new OrderItem()
                         {
                             Id = orderItem.ProductId,
                             Quantity = orderItem.Quantity,
-                            Price = itemPrice.ToString("0.00", CultureInfo.InvariantCulture)
+                            Price = realPrice.ToString("0.00", CultureInfo.InvariantCulture)
                         };
 
                         var values = _productAttributeParser.ParseProductAttributeValues(orderItem.AttributesXml);
